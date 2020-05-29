@@ -1,7 +1,7 @@
 pipeline {
      agent any
      stages {
-         stage('Build') {
+         stage("Build") {
              steps {
                  sh 'echo "Hello World"'
                  sh '''
@@ -10,23 +10,22 @@ pipeline {
                  '''
              }
          }
-         stage('Lint HTML') {
-              steps {
-                  sh 'tidy -q *.html'
-              }
-         }
+         stage("Lint HTML") {
+            steps{
+                sh 'tidy -q -e *.html'
+                }
+        }
          stage('Security Scan') {
               steps { 
                  aquaMicroscanner imageName: 'alpine:latest', notCompleted: 'exit 1', onDisallowed: 'fail'
               }
          }         
-         stage('Upload to AWS') {
-              steps {
-                  withAWS(region:'us-east-2',credentials:'blueocean') {
-                  sh 'echo "Uploading content with AWS creds"'
-                      s3Upload(pathStyleAccessEnabled: true, payloadSigningEnabled: true, file:'index.html', bucket:'shree-static-jenkins-pipeline')
-                  }
-              }
-         }
+         stage("Upload to AWS") {
+            steps{
+                withAWS(credentials: 'blueocean', region: 'us-east-2'){
+                    s3Upload bucket: 'shree-static-jenkins-pipeline', file: 'index.html', pathStyleAccessEnabled: true, payloadSigningEnabled: true
+                }          
+            }
+        }
      }
 }
